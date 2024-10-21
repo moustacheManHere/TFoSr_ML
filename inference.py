@@ -66,12 +66,34 @@ def draw_landmarks_on_image(rgb_image, detection_result):
     return annotated_image
 
 
+def handmarks_to_normalise(detection_result):
+    min_x = min([landmark.x for landmark in detection_result.hand_landmarks[0]])
+    max_x = max([landmark.x for landmark in detection_result.hand_landmarks[0]])
+    min_y = min([landmark.y for landmark in detection_result.hand_landmarks[0]])
+    max_y = max([landmark.y for landmark in detection_result.hand_landmarks[0]])
+
+    width = max_x - min_x
+    height = max_y - min_y
+
+    return_coords = []
+
+    for i in range(21):
+        return_coords.append(
+            (
+                (detection_result.hand_landmarks[0][i].x - min_x) / width,
+                (detection_result.hand_landmarks[0][i].y - min_y) / height,
+            )
+        )
+
+    return return_coords
+
+
 cap = cv2.VideoCapture("videos/Learn ASL Alphabet Video.mp4")
 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fps = cap.get(cv2.CAP_PROP_FPS)
 
-output_path = "videos/output2.mp4"
+output_path = "videos/output3.mp4"
 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
@@ -80,6 +102,8 @@ frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 base_options = python.BaseOptions(model_asset_path="models/hand_landmarker.task")
 options = vision.HandLandmarkerOptions(base_options=base_options, num_hands=2)
 detector = vision.HandLandmarker.create_from_options(options)
+
+device = torch.device("mps")
 
 
 class MLP(nn.Module):
@@ -99,8 +123,9 @@ class MLP(nn.Module):
         return x
 
 
-loaded_model = MLP(42, 128, 26)
-loaded_model.load_state_dict(torch.load("models/mlp_hand_sign_classifier.pt"))
+loaded_model = torch.jit.load("hand_keypoints_classifier_new.pt")
+loaded_model = loaded_model.to(device)
+loaded_model.eval()
 
 for _ in tqdm(range(frame_count)):
     ret, frame = cap.read()
@@ -122,21 +147,23 @@ for _ in tqdm(range(frame_count)):
         continue
     keypoints = {}
 
-    for i in range(21):
-        keypoints[f"kp_{i}_x"] = detection_result.hand_landmarks[0][i].x
-        keypoints[f"kp_{i}_y"] = detection_result.hand_landmarks[0][i].y
+    normalised_coords = handmarks_to_normalise(detection_result)
+
+    for i, (x, y) in enumerate(normalised_coords):
+        keypoints[f"kp_{i}_x"] = x
+        keypoints[f"kp_{i}_y"] = y
 
     keypoints = sorted(keypoints.items())
     key_values = [value for key, value in keypoints]
 
     input = np.array(key_values, dtype=np.float32)
-    input = torch.tensor(input, dtype=torch.float32)
-
+    input = torch.tensor(input, dtype=torch.float32).to(device)
+    print(input)
     with torch.no_grad():
         output = loaded_model(input)
-
+    print(output)
     ascii_uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    predicted_class = ascii_uppercase[np.argmax(output.numpy())]
+    predicted_class = ascii_uppercase[np.argmax(output.cpu().numpy())]
 
     cv2.putText(
         annotated_image,

@@ -2,3 +2,4 @@ videos
 online_data
 data/train
 data/val
+.DS_Store

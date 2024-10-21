@@ -26,6 +26,29 @@ detector = vision.HandLandmarker.create_from_options(options)
 
 dataset = []
 
+
+def handmarks_to_normalise(detection_result):
+    min_x = min([landmark.x for landmark in detection_result.hand_landmarks[0]])
+    max_x = max([landmark.x for landmark in detection_result.hand_landmarks[0]])
+    min_y = min([landmark.y for landmark in detection_result.hand_landmarks[0]])
+    max_y = max([landmark.y for landmark in detection_result.hand_landmarks[0]])
+
+    width = max_x - min_x
+    height = max_y - min_y
+
+    return_coords = []
+
+    for i in range(21):
+        return_coords.append(
+            (
+                (detection_result.hand_landmarks[0][i].x - min_x) / width,
+                (detection_result.hand_landmarks[0][i].y - min_y) / height,
+            )
+        )
+
+    return return_coords
+
+
 for directory in directorys:
     class_name = os.path.basename(directory)
 
@@ -49,9 +72,11 @@ for directory in directorys:
 
         keypoints = {}
 
-        for i in range(21):
-            keypoints[f"kp_{i}_x"] = detection_result.hand_landmarks[0][i].x
-            keypoints[f"kp_{i}_y"] = detection_result.hand_landmarks[0][i].y
+        normalised_coords = handmarks_to_normalise(detection_result)
+
+        for i, (x, y) in enumerate(normalised_coords):
+            keypoints[f"kp_{i}_x"] = x
+            keypoints[f"kp_{i}_y"] = y
 
         keypoints["class"] = class_name
 
