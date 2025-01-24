@@ -1,28 +1,34 @@
-import streamlit as st
-import av
-import torch
-import numpy as np
 import cv2
-import threading
+import streamlit as st
+import numpy as np
+import torch
+import torch.nn as nn
+
 import mediapipe as mp
 from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
-from streamlit_webrtc import webrtc_streamer
 
-# Constants (same as previous script)
+# Constants for visualization
 MARGIN = 10
 FONT_SIZE = 5
-FONT_THICKNESS = 5
-HANDEDNESS_TEXT_COLOR = (88, 205, 54)
+FONT_THICKNESS = 1
+HANDEDNESS_TEXT_COLOR = (88, 205, 54)  # vibrant green
 ASCII_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-LETTER_COLOR = (255, 0, 0)
+LETTER_COLOR = (255, 0, 0)  # Blue color
 LETTER_POSITION = (100, 200)
-BOX_COLOR = (255, 255, 255)
+BOX_COLOR = (255, 255, 255)  # White color
 
 class HandLandmarkClassifier:
     def __init__(self, landmark_model_path, classifier_model_path):
+        """
+        Initialize hand landmark detector and gesture classifier.
+        
+        Args:
+            landmark_model_path (str): Path to MediaPipe hand landmark model
+            classifier_model_path (str): Path to PyTorch hand gesture classification model
+        """
         # Initialize hand landmark detector
         base_options = python.BaseOptions(model_asset_path=landmark_model_path)
         options = vision.HandLandmarkerOptions(base_options=base_options, num_hands=2)
@@ -34,6 +40,15 @@ class HandLandmarkClassifier:
         self.model.eval()
 
     def _normalize_hand_landmarks(self, detection_result):
+        """
+        Normalize hand landmarks to a unit coordinate system.
+        
+        Args:
+            detection_result: MediaPipe hand detection result
+        
+        Returns:
+            list: Normalized coordinates of hand landmarks
+        """
         landmarks = detection_result.hand_landmarks[0]
         min_x = min(landmark.x for landmark in landmarks)
         max_x = max(landmark.x for landmark in landmarks)
@@ -52,6 +67,16 @@ class HandLandmarkClassifier:
         ]
 
     def draw_landmarks(self, rgb_image, detection_result):
+        """
+        Draw hand landmarks and handedness on the image.
+        
+        Args:
+            rgb_image (np.ndarray): Input RGB image
+            detection_result: MediaPipe hand detection result
+        
+        Returns:
+            np.ndarray: Annotated image
+        """
         annotated_image = np.copy(rgb_image)
         hand_landmarks_list = detection_result.hand_landmarks
         handedness_list = detection_result.handedness
@@ -76,6 +101,15 @@ class HandLandmarkClassifier:
         return annotated_image
 
     def classify_gesture(self, frame):
+        """
+        Detect hand landmarks and classify hand gesture.
+        
+        Args:
+            frame (np.ndarray): Input video frame
+        
+        Returns:
+            np.ndarray: Annotated image with gesture classification
+        """
         # Convert frame to MediaPipe image
         image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
         
@@ -132,45 +166,33 @@ class HandLandmarkClassifier:
         
         return annotated_image
 
-
-def main():
-    st.title("Hand Gesture Recognition")
-    
-    # Initialize classifier
-    classifier = HandLandmarkClassifier(
+classifier = HandLandmarkClassifier(
         landmark_model_path="models/hand_landmarker.task",
         classifier_model_path="models/hand_keypoints_classifier_new_cpu.pt"
     )
-    
-    # Threading setup
-    lock = threading.Lock()
-    img_container = {"img": None}
-    
-    def video_frame_callback(frame):
-        img = frame.to_ndarray(format="bgr24")
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # Convert to RGB
-        processed_img = classifier.classify_gesture(img)
-        
-        with lock:
-            img_container["img"] = processed_img
-        
-        return frame
-    
-    # WebRTC streamer
-    ctx = webrtc_streamer(
-        key="hand-gesture", 
-        video_frame_callback=video_frame_callback
-    )
-    
-    # Display processed frame
-    frame_place = st.empty()
-    
-    while ctx.state.playing:
-        with lock:
-            img = img_container["img"]
-        
-        if img is not None:
-            frame_place.image(img)
 
-if __name__ == "__main__":
-    main()
+img_file_buffer = st.camera_input("Take a picture")
+
+if img_file_buffer is not None:
+    # To read image file buffer with OpenCV:
+    bytes_data = img_file_buffer.getvalue()
+    cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+
+    # Inference model
+
+    # Convert the image to RGB (OpenCV uses BGR)
+    img_rgb = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
+
+    # Perform inference
+    annotated_image = classifier.classify_gesture(img_rgb)
+
+    # Display the annotated image
+    st.image(annotated_image, channels="RGB")
+
+    # Check the type of cv2_img:
+    # Should output: <class 'numpy.ndarray'>
+    # st.write(type(cv2_img))
+
+    # Check the shape of cv2_img:
+    # Should output shape: (height, width, channels)
+    # st.write(cv2_img.shape)
