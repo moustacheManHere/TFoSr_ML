@@ -35,7 +35,7 @@ class HandLandmarkClassifier:
         self.detector = vision.HandLandmarker.create_from_options(options)
         
         # Initialize gesture classifier
-        self.device = torch.device("mps")
+        self.device = torch.device("cpu")
         self.model = torch.jit.load(classifier_model_path).to(self.device)
         self.model.eval()
 
