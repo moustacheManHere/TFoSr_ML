@@ -126,18 +126,25 @@ class HandLandmarkClassifier:
         if not detection_result.hand_landmarks:
             return annotated_image
         
-        # Normalize and prepare landmarks for classification
-        normalized_coords = self._normalize_hand_landmarks(detection_result)
-        keypoints = {f"kp_{i}_x": x for i, (x, _) in enumerate(normalized_coords)}
-        keypoints.update({f"kp_{i}_y": y for i, (_, y) in enumerate(normalized_coords)})
-        
-        # Convert to model input
-        key_values = [value for _, value in sorted(keypoints.items())]
-        input_tensor = torch.tensor(key_values, dtype=torch.float32).to(self.device)
-        
-        # Predict gesture
+        keypoints = {}
+
+        normalised_coords = self._normalize_hand_landmarks(detection_result)
+
+        for i, (x, y) in enumerate(normalised_coords):
+            keypoints[f"kp_{i}_x"] = x
+            keypoints[f"kp_{i}_y"] = y
+
+        keypoints = (keypoints.items())
+        key_values = [value for key, value in keypoints]
+
+        input = np.array(key_values, dtype=np.float32)
+        input = torch.tensor(input, dtype=torch.float32).to(self.device)
+        print(input)
         with torch.no_grad():
-            output = self.model(input_tensor)
+            output = self.model(input)
+        
+        ascii_uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        predicted_class = ascii_uppercase[np.argmax(output.cpu().numpy())]
         
         # Add white box behind the letter
         box_thickness = -1  # Filled rectangle
@@ -152,7 +159,6 @@ class HandLandmarkClassifier:
         )
         
         # Add predicted class to image with blue color and larger size
-        predicted_class = ASCII_UPPERCASE[np.argmax(output.cpu().numpy())]
         cv2.putText(
             annotated_image,
             predicted_class,
