@@ -123,7 +123,7 @@ class MLP(nn.Module):
         return x
 
 
-loaded_model = torch.jit.load("hand_keypoints_classifier_new.pt")
+loaded_model = torch.jit.load("hand_keypoints_classifier_new_cpu.pt")
 loaded_model = loaded_model.to(device)
 loaded_model.eval()
 
@@ -153,7 +153,7 @@ for _ in tqdm(range(frame_count)):
         keypoints[f"kp_{i}_x"] = x
         keypoints[f"kp_{i}_y"] = y
 
-    keypoints = sorted(keypoints.items())
+    keypoints = (keypoints.items())
     key_values = [value for key, value in keypoints]
 
     input = np.array(key_values, dtype=np.float32)
