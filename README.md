@@ -27,8 +27,6 @@ git clone https://github.com/moustacheManHere/TFoSr_ML.git
 cd TFoSr_ML  
 ```  
 
----
-
 ### Running with Docker  
 
 1. **Build and Start the Application**:  
@@ -38,8 +36,6 @@ cd TFoSr_ML
 
 2. **Access the API**:  
    The API will be available at [http://localhost:8000](http://localhost:8000).  
-
----
 
 ### Local Development  
 
@@ -52,8 +48,6 @@ cd TFoSr_ML
    ```bash  
    fastapi run main.py
    ```  
-
----
 
 ### API Endpoints  
 
@@ -70,8 +64,6 @@ cd TFoSr_ML
     ```  
 
 An example of calling this API is shown in the provided `test.py` script.  
-
---- 
 
 ### Testing  
 
