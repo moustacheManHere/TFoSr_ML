@@ -137,7 +137,7 @@ The Streamlit-related scripts are in the `streamlit` folder:
 #### Streamlit Deployment  
 
 The Streamlit app is deployed and accessible at:  
-[https://tfosr-ml.streamlit.app/](https://tfosr-ml.streamlit.app/)  
+[https://tfosrml.streamlit.app/](https://tfosrml.streamlit.app/)  
 
 You can run another script called `working_app.py` using the following command to test this locally.
 
