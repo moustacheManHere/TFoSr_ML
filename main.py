@@ -11,8 +11,16 @@ from mediapipe.framework.formats import landmark_pb2
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change this to specific origins for security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 ASCII_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -96,6 +104,6 @@ async def predict_letters(files: List[UploadFile] = File(...)):
 
         return JSONResponse(content={"majority_letter": majority_letter, "all_predictions": predicted_letters})
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return JSONResponse(content={"majority_letter": None, "all_predictions": None})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred during prediction: {str(e)}")
