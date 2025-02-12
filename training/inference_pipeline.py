@@ -123,7 +123,7 @@ class MLP(nn.Module):
         return x
 
 
-loaded_model = torch.jit.load("models/hand_keypoints_classifier_new_cpu.pt")
+loaded_model = torch.jit.load("models/hand_keypoints_classifier_cpu_lr.pt")
 loaded_model = loaded_model.to(device)
 loaded_model.eval()
 

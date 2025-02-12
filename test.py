@@ -19,8 +19,8 @@ image_bytes = buffer.tobytes()
 files = [("files", (f"image_{i}.jpg", image_bytes, "image/jpeg")) for i in range(5)]
 
 # Define the endpoint URL
-url = "http://0.0.0.0:8000/predict"
-
+# url = "http://0.0.0.0:8000/predict"
+url = "https://tfosr-ml.onrender.com/predict"
 
 # Number of times to post
 num_requests = 10

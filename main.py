@@ -69,12 +69,12 @@ class HandLandmarkClassifier:
             output = self.model(input_tensor)
 
         predicted_index = np.argmax(output.cpu().numpy())
-        return ASCII_UPPERCASE[predicted_index]
+        return ASCII_UPPERCASE[predicted_index], normalized_coords
 
 # Initialize the classifier with your model paths
 classifier = HandLandmarkClassifier(
     landmark_model_path="models/hand_landmarker.task",
-    classifier_model_path="models/hand_keypoints_classifier_new_cpu.pt"
+    classifier_model_path="models/hand_keypoints_classifier_cpu_lr.pt"
 )
 
 @app.post("/predict")
@@ -93,7 +93,7 @@ async def predict_letters(files: List[UploadFile] = File(...)):
             image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
             # Classify the gesture
-            predicted_letter = classifier.classify_gesture(image_rgb)
+            predicted_letter, normalized_coords = classifier.classify_gesture(image_rgb)
             predicted_letters.append(predicted_letter)
 
         # Determine the majority letter
@@ -102,7 +102,8 @@ async def predict_letters(files: List[UploadFile] = File(...)):
 
         majority_letter = Counter(predicted_letters).most_common(1)[0][0]
 
-        return JSONResponse(content={"majority_letter": majority_letter, "all_predictions": predicted_letters})
+        # return JSONResponse(content={"majority_letter": majority_letter, "all_predictions": predicted_letters})
+        return JSONResponse(content={"majority_letter": majority_letter, "all_predictions": predicted_letters, "normalized_coords": normalized_coords})
     except ValueError as e:
         return JSONResponse(content={"majority_letter": None, "all_predictions": None})
     except Exception as e:

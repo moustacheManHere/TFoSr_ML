@@ -174,7 +174,7 @@ class HandLandmarkClassifier:
 
 classifier = HandLandmarkClassifier(
         landmark_model_path="models/hand_landmarker.task",
-        classifier_model_path="models/hand_keypoints_classifier_new_cpu.pt"
+        classifier_model_path="models/hand_keypoints_classifier_cpu_lr.pt"
     )
 
 img_file_buffer = st.camera_input("Take a picture")
