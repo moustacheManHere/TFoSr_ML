@@ -20,6 +20,12 @@ LETTER_COLOR = (255, 0, 0)  # Blue color
 LETTER_POSITION = (100, 200)
 BOX_COLOR = (255, 255, 255)  # White color
 
+ML_THRESHOLDS = {
+    "A": 10, "B": 15, "C": 20, "D": 0, "E": 5, "F": 10, "G": 15, "H": 10,
+    "I": 0, "K": 10, "L": 5, "M": 5, "N": 5, "O": 0, "P": 10, "Q": 15, 
+    "R": 0, "S": 0, "T": 5, "U": 0, "V": 5, "W": 10, "X": 10, "Y": 5
+}
+
 class HandLandmarkClassifier:
     def __init__(self, landmark_model_path, classifier_model_path):
         """
@@ -145,6 +151,9 @@ class HandLandmarkClassifier:
         
         ascii_uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         predicted_class = ascii_uppercase[np.argmax(output.cpu().numpy())]
+        
+        if output[np.argmax(output.cpu().numpy())] < ML_THRESHOLDS[predicted_class]:
+            predicted_class = "-"
         
         # Add white box behind the letter
         box_thickness = -1  # Filled rectangle

@@ -23,6 +23,11 @@ app.add_middleware(
 )
 
 ASCII_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ML_THRESHOLDS = {
+    "A": 10, "B": 15, "C": 20, "D": 0, "E": 5, "F": 10, "G": 15, "H": 10,
+    "I": 0, "K": 10, "L": 5, "M": 5, "N": 5, "O": 0, "P": 10, "Q": 15, 
+    "R": 0, "S": 0, "T": 5, "U": 0, "V": 5, "W": 10, "X": 10, "Y": 5
+}
 
 class HandLandmarkClassifier:
     def __init__(self, landmark_model_path, classifier_model_path):
@@ -69,7 +74,11 @@ class HandLandmarkClassifier:
             output = self.model(input_tensor)
 
         predicted_index = np.argmax(output.cpu().numpy())
-        return ASCII_UPPERCASE[predicted_index], normalized_coords
+
+        predicted_letter = ASCII_UPPERCASE[predicted_index]
+        if output[predicted_index] < ML_THRESHOLDS[predicted_letter]:
+            predicted_letter = "-"        
+        return predicted_letter, normalized_coords
 
 # Initialize the classifier with your model paths
 classifier = HandLandmarkClassifier(
