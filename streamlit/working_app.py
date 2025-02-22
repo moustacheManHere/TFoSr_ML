@@ -15,7 +15,7 @@ MARGIN = 10
 FONT_SIZE = 5
 FONT_THICKNESS = 1
 HANDEDNESS_TEXT_COLOR = (88, 205, 54)  # vibrant green
-ASCII_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ASCII_UPPERCASE = "ABCDEFGHIKLMNOPQRSTUVWXY"
 LETTER_COLOR = (255, 0, 0)  # Blue color
 LETTER_POSITION = (100, 200)
 BOX_COLOR = (255, 255, 255)  # White color
@@ -149,7 +149,7 @@ class HandLandmarkClassifier:
         with torch.no_grad():
             output = self.model(input)
         
-        ascii_uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        ascii_uppercase = "ABCDEFGHIKLMNOPQRSTUVWXY"
         predicted_class = ascii_uppercase[np.argmax(output.cpu().numpy())]
         
         if output[np.argmax(output.cpu().numpy())] < ML_THRESHOLDS[predicted_class]:

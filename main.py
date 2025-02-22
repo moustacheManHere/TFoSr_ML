@@ -22,7 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-ASCII_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ASCII_UPPERCASE = "ABCDEFGHIKLMNOPQRSTUVWXY"
 ML_THRESHOLDS = {
     "A": 10, "B": 15, "C": 20, "D": 0, "E": 5, "F": 10, "G": 15, "H": 10,
     "I": 0, "K": 10, "L": 5, "M": 5, "N": 5, "O": 0, "P": 10, "Q": 15, 
